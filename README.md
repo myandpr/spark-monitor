@@ -5,7 +5,7 @@
   其中，最重要的是App存活，因为峰值容易导致应用挂掉
 ### App存活监控
   在yarn上运行的spark，可以通过yarn客户端获取任务。
-'''
+```
 Configuration conf = new YarnConfiguration();
 YarnClient yarnClient = YarnClient.createYarnClient();
 yarnClient.init(conf);
@@ -22,16 +22,16 @@ try{
    e.printStackTrace();
 }
        yarnClient.stop();
-'''
+```
   还可以有更加细节监控：executor数量，内存，cup等。以下就是获取这些指标的方法：
 #### ApplicationInfo
   调用SparkContext的AppStatusStore（新版本的spark有，应该是从2.X的某个版本开始的，具体忘了）
-'''
+```
 val statusStore = sparkContext.statusStore
 statusStore.applicationinfo()
-'''
+```
   以下是获取到的ApplicationInfo的结构
-'''
+```
 case class ApplicationInfo private[spark](
     id: String,
     name: String,
@@ -40,20 +40,20 @@ case class ApplicationInfo private[spark](
     coresPerExecutor: Option[Int],
     memoryPerExecutorMB: Option[Int],
     attempts: Seq[ApplicationAttemptInfo]) 
-'''
+```
 #### AppSummary
   调用SparkContext的AppStatusStore对象获取AppSummary汇总
-'''
+```
 val statusStore = sparkContext.statusStore
 statusStore.appSummary()
 
 statusStore.appSummary().numCompletedJobs
 statusStore.appSummary().numCompletedStages
-'''
+```
 ### Job监控
   job的运行状态信息，spark streaming的job堆积情况。这种监控主要是通过继承一个StreamingListener，然后SparkContext.addStreamingListener注册监听器。
   下面例子是spark streaming 数据量过大，导致batch不能及时处理而使得batch堆积的情况。
-'''
+```
 val waitingBatchUIData = new HashMap[Time, BatchUIData]
 ssc.addStreamingListener(new StreamingListener {
   override def onStreamingStarted(streamingStarted: StreamingListenerStreamingStarted): Unit = println("started")
@@ -79,11 +79,11 @@ ssc.addStreamingListener(new StreamingListener {
 
   override def onOutputOperationCompleted(outputOperationCompleted: StreamingListenerOutputOperationCompleted): Unit = super.onOutputOperationCompleted(outputOperationCompleted)
 })
-'''
+```
   最终，我们使用waitingBatchUIData的大小，代表待处理的batch大小，比如待处理批次大于10，就告警，这个可以按照任务的重要程度和持续时间来设置一定的告警规则，避免误操作。
 ### Stage监控
   这个不太重要，statusStore.activeStages()得到的是一个Seq[v1.StageData] 
-'''
+```
 class StageData private[spark](
     val status: StageStatus,
     val stageId: Int,
@@ -123,15 +123,15 @@ class StageData private[spark](
     val tasks: Option[Map[Long, TaskData]],
     val executorSummary: Option[Map[String, ExecutorStageSummary]],
     val killedTasksSummary: Map[String, Int])
-'''
+```
 
 ### RDD监控
   最不重要的，SparkContext.AppStatusStore
-'''
+```
 val statusStore = sparkContext.statusStore
 statusStore.rddList()
-'''
-'''
+```
+```
 class RDDStorageInfo private[spark](
     val id: Int,
     val name: String,
@@ -163,16 +163,16 @@ class RDDPartitionInfo private[spark](
     val memoryUsed: Long,
     val diskUsed: Long,
     val executors: Seq[String])
-'''
+```
 
 ### RDD内存及缓存监控
 ### Executor监控
   Executor的注册，启动，挂掉都可以通过SparkListener来获取到，而单个executor内部的细节获取也还是通过SparkContext的一个内部变量，叫做SparkStatusTracker。
-  '''
+  ```
   sc.statusTracker.getExecutorInfos
-  '''
+  ```
   得到的是一个Array[SparkExecutorInfo]
-‘’‘
+```
 private class SparkExecutorInfoImpl(
     val host: String,
     val port: Int,
@@ -183,7 +183,7 @@ private class SparkExecutorInfoImpl(
     val totalOnHeapStorageMemory: Long,
     val totalOffHeapStorageMemory: Long)
   extends SparkExecutorInfo
-’‘’
+```
 
 ## 总结
   其实最重要的监控就两种：
